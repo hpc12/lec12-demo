@@ -6,7 +6,7 @@ import matplotlib.pyplot as pt
 
 # {{{ build US mesh
 
-points = np.loadtxt("us-outline.dat")
+outline = np.loadtxt("us-outline.dat")
 
 def round_trip_connect(start, end):
     result = []
@@ -21,15 +21,25 @@ def needs_refinement(vertices, area):
     bary_y = (vert_origin.y + vert_destination.y + vert_apex.y) / 3
 
     dist_center = np.sqrt((bary_x-600)**2 + (750-bary_y)**2 )
-    max_area = 2 + 0.8*dist_center
+    max_area = 1 + 0.8*dist_center
     return bool(area > max_area)
 
 
 info = triangle.MeshInfo()
-info.set_points(points)
-info.set_facets(round_trip_connect(0, len(points)-1))
+info.set_points(outline)
+info.set_facets(round_trip_connect(0, len(outline)-1))
 
 mesh = triangle.build(info, refinement_func=needs_refinement)
+
+points = np.array(mesh.points)
+elements = np.array(mesh.elements)
+
+if 1:
+    pt.triplot(points[:, 0], points[:, 1], elements, color="black")
+    pt.show()
+
+    import sys
+    sys.exit()
 
 # }}}
 
@@ -62,14 +72,14 @@ lap = coo_matrix((data, (row,col)), dtype=np.float64).tocsr()
 
 # }}}
 
-eigval, eigvec = sla.eigsh(lap, 5, which="SM")
+eigval, eigvec = sla.eigs(lap, 6, which="SM")
+print eigval
 
-points = np.array(mesh.points)
-elements = np.array(mesh.elements)
-
-for vec in eigvec.T:
+for vec in eigvec.T[1:]:
+    vec = vec.real
     pt.triplot(points[:, 0], points[:, 1], elements, color="black", lw=0.1)
     pt.tripcolor(points[:, 0], points[:, 1], elements, vec)
+    pt.colorbar()
     pt.tricontour(points[:, 0], points[:, 1], elements, vec, colors="black", levels=[0])
     pt.show()
 

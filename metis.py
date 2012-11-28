@@ -4,7 +4,7 @@ import matplotlib.pyplot as pt
 
 # {{{ build US mesh
 
-points = np.loadtxt("us-outline.dat")
+outline = np.loadtxt("us-outline.dat")
 
 def round_trip_connect(start, end):
     result = []
@@ -24,8 +24,8 @@ def needs_refinement(vertices, area):
 
 
 info = triangle.MeshInfo()
-info.set_points(points)
-info.set_facets(round_trip_connect(0, len(points)-1))
+info.set_points(outline)
+info.set_facets(round_trip_connect(0, len(outline)-1))
 
 mesh = triangle.build(info, refinement_func=needs_refinement)
 
@@ -48,7 +48,7 @@ elements = np.array(mesh.elements)
 
 vweights = points[:,1]**2
 
-cuts, part_vert = part_graph(4, adjacency,
+cuts, part_vert = part_graph(2, adjacency,
         #vweights=[int(x) for x in vweights]
         )
 
