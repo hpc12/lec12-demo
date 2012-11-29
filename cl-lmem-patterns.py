@@ -11,6 +11,8 @@ n = 5 * (2**10)**2
 mf = cl.mem_flags
 a = cl.array.zeros(queue, n, np.float32)
 
+arg = int(sys.argv[1])
+
 prg = cl.Program(ctx, """//CL//
     #define ARGUMENT myarg
 
@@ -24,11 +26,17 @@ prg = cl.Program(ctx, """//CL//
 
       loc[li] = 0;
 
-      for (int j = 0; j < 1000; ++j)
-        loc[li] += loc[ARGUMENT * li];
+      float x = 0;
+      for (int j = 0; j < 100; ++j)
+      {
+        #pragma unroll
+        for (int k = 0; k < 10; ++k)
+          x += loc[ARGUMENT * li];
+      }
+      loc[li] = x;
     }
 
-    """.replace("myarg", sys.argv[1])).build()
+    """.replace("myarg", str(arg))).build()
 
 from time import time
 
@@ -41,7 +49,7 @@ for i in xrange(ntrips):
     prg.fill_vec(queue, (n,), (128,), a.data, np.int64(n))
 queue.finish()
 t2 = time()
-print "elapsed: %g s" % ((t2-t1)/ntrips)
+print "arg %d elapsed: %g s" % (arg, (t2-t1)/ntrips)
 
 # vim: filetype=pyopencl
 
